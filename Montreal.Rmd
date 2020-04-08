@@ -20,7 +20,7 @@ library(evmix)
 ```
 
 ```{r, warning=FALSE}
-df <- read_csv("MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
+df <- read_csv("Datasets/MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
 names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
@@ -29,7 +29,7 @@ df
 
 ```{r}
 df <- drop_na(df,Max_Temp) %>% group_by(Date_Time) %>% top_n(1, Max_Temp)
-df_temperature_07 <- df %>% filter(.,Month==7)
+df_temperature_07 <- df %>% dplyr::filter(.,Month==7)
 df_temperature_07
 ```
 
@@ -43,7 +43,11 @@ ggplot(df, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("
 ```
 
 ```{r}
-ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal temperature") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
+ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal Daily Maxima in July") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) 
 ```
 
 ```{r}
@@ -132,7 +136,7 @@ b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
 
 grad_Zp <- c(1, a, b)
 
-var_Zp_10 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Zp_10 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
 var_Zp_10
 ```
 
@@ -145,7 +149,7 @@ b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
 
 grad_Zp <- c(1, a, b)
 
-var_Zp_100 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Zp_100 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
 var_Zp_100
 ```
 
@@ -156,7 +160,7 @@ b <-  (sig / (xi^2))
 
 grad_Zp <- c(1, a, b)
 
-var_Z_0 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
 var_Z_0
 ```
 
@@ -184,7 +188,11 @@ z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          )
 ```
 
 
@@ -206,7 +214,7 @@ df_rank
 
 ```{r}
 k <- 20
-rank_k <- df_rank %>% filter(.,rank<=k+0.5) %>% mutate(rank_mod = ifelse(rank %% 1 == 0, rank, rank-0.5)) %>% dplyr::select(.,Year,rank_mod,Max_Temp) %>% distinct(.) %>% pivot_wider(.,names_from=rank_mod, values_from = Max_Temp)
+rank_k <- df_rank %>% dplyr::filter(.,rank<=k+0.5) %>% mutate(rank_mod = ifelse(rank %% 1 == 0, rank, rank-0.5)) %>% dplyr::select(.,Year,rank_mod,Max_Temp) %>% distinct(.) %>% pivot_wider(.,names_from=rank_mod, values_from = Max_Temp)
 rank_k
 ```
 
@@ -271,7 +279,11 @@ z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point(color="firebrick") + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="black")
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=1)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          )
 ```
 
 ```{r}
@@ -283,7 +295,11 @@ z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=2)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          )
 ```
 
 
@@ -296,7 +312,11 @@ z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=3)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          )
 ```
 
 
@@ -333,11 +353,28 @@ df
 ```
 
 ```{r}
-ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale MLE value")#+ geom_abline(intercept = mod_1$coefficients[1], slope = mod_1$coefficients[2], color="red")
+u_0 <- 29
+df_mod <- df %>% dplyr::filter(.,u>u_0)
+mod_scale <- lm(scale ~ u, df_mod)
+summary(mod_scale)
+title <- paste0("Scale Parameter")
+ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale MLE value") + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + geom_abline(intercept = mod_scale$coefficients[1], slope = mod_scale$coefficients[2], color="firebrick")
 ```
 
 ```{r}
-ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape MLE value")#+ geom_abline(intercept = mod_1$coefficients[1], slope = mod_1$coefficients[2], color="red")
+df_mod <- df %>% dplyr::filter(.,u>u_0)
+mod_shape <- lm(shape ~ u, df_mod)
+summary(mod_shape)
+title <- paste0("Shape Parameter")
+ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape MLE value")  + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + geom_abline(intercept = mod_shape$coefficients[1], slope = mod_shape$coefficients[2], color="firebrick")
 ```
 
 
@@ -352,20 +389,24 @@ mrlplot(obs, tlim = c(26,32), nt = 20,
 ```{r}
 mrlplot(obs, tlim = c(26,31), nt = 20,
   p.or.n = FALSE, alpha = 0.05, ylim = NULL,
-  legend.loc = "bottomleft", try.thresh = quantile(obs, 0.80, na.rm =
-  TRUE), main = "Mean Residual Life Plot", xlab = "Threshold u",
+  legend.loc = "bottomleft", try.thresh = u_0, main = "Mean Residual Life Plot", xlab = "Threshold u",
   ylab = "Mean Excess")
 ```
 
 
 ```{r}
-u_0 <- 29
 mod = gpdFit(obs, u = u_0)
 V <- mod@fit$varcov
 V[1,1] <- mod@fit$varcov[2,2]
 V[2,2] <- mod@fit$varcov[1,1]
 V
 ```
+
+```{r}
+mod@fit$par.ests
+mod@fit$par.ses
+```
+
 
 ```{r}
 sig <- mod@fit$par.ests[2]
