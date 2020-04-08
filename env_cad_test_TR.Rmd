@@ -178,6 +178,15 @@ up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
 print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
 ```
 
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+```
+
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -237,20 +246,56 @@ rank_k <- data.frame(as.matrix(rank_k[,names]))
 rank_k
 ```
 
-```{r}
+```{r, results=FALSE}
 r_1 <- rlarg.fit(rank_k[,-1],r=1)
+r_2 <- rlarg.fit(rank_k[,-1],r=2)
+r_3 <- rlarg.fit(rank_k[,-1],r=3)
+r_4 <- rlarg.fit(rank_k[,-1],r=4)
+r_5 <- rlarg.fit(rank_k[,-1],r=5)
+r_6 <- rlarg.fit(rank_k[,-1],r=6)
+r_7 <- rlarg.fit(rank_k[,-1],r=7)
+r_8 <- rlarg.fit(rank_k[,-1],r=8)
+r_9 <- rlarg.fit(rank_k[,-1],r=9)
+r_10 <- rlarg.fit(rank_k[,-1],r=10)
+```
+
+31.6642177  1.7369478 -0.3592955
+
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_1$mle[1]
+sig <- r_1$mle[2]
+xi <- r_1$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point(color="firebrick") + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="black")
 ```
 
 ```{r}
-r_1 <- rlarg.fit(rank_k[,-1],r=2)
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_2$mle[1]
+sig <- r_2$mle[2]
+xi <- r_2$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
 ```
 
-```{r}
-r_1 <- rlarg.fit(rank_k[,-1],r=5)
-```
 
 ```{r}
-r_1 <- rlarg.fit(rank_k[,-1],r=10)
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_3$mle[1]
+sig <- r_3$mle[2]
+xi <- r_3$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
 ```
 
 
