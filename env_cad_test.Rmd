@@ -1,0 +1,403 @@
+---
+title: "env_cad_test"
+author: "Lambert De Monte - 260746902"
+date: "24 mars 2020"
+output: html_document
+---
+
+```{r, include=FALSE}
+library(tinytex)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+library(purrr)
+library(rlist)
+library(evd)
+library(ismev)
+library(fExtremes)
+library(evmix)
+```
+
+```{r, warning=FALSE}
+df <- read_csv("MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
+names(df)[names(df) == "Date/Time"] <- "Date_Time"
+names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
+names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
+df
+```
+
+```{r}
+df <- drop_na(df,Max_Temp) %>% group_by(Date_Time) %>% top_n(1, Max_Temp)
+df_temperature_07 <- df %>% filter(.,Month==7)
+df_temperature_07
+```
+
+```{r}
+mod <- lm(Max_Temp ~ Date_Time,df)
+mod$coefficients[2]
+```
+
+```{r}
+ggplot(df, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal temperature") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
+```
+
+```{r}
+ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal temperature") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
+```
+
+```{r}
+ggplot(df, aes(x=Date_Time, y= Total_Rain_mm)) + geom_point() + xlab("Date") + ylab("Précipitations de pluie") + ggtitle("McGill temperature") #+ geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
+```
+
+Recherche rapide pour les records de précipitations (test de données): Selon météomedia, le mois record contenait une journée avec 55mm de pluie, données probables à premiere vue.
+
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+                                                                                   BLOCK MAXIMA APPROACH
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+
+```{r}
+df_max_07 <- df_temperature_07 %>% group_by(Year)  %>% summarise(.,max = max(Max_Temp))
+df_max_07
+```
+
+```{r}
+#compute MLEs with different library
+model <- gevFit(df_max_07$max)
+model@fit$par.ests
+model@fit$par.ses
+```
+
+```{r}
+#Compute the MLEs
+model1 <- fgev(x=df_max_07$max)
+model1$estimate
+model1$std.err
+```
+
+```{r}
+make_CI_mle <- function(MLEs,st_err){
+  Lower = list()
+  Upper = list()
+  for(i in 1:length(MLEs)){
+    low <- MLEs[i] - 1.96 * st_err[i]
+    up <- MLEs[i] + 1.96 * st_err[i]
+    Lower[length(Lower)+1] <- low
+    Upper[length(Upper)+1] <- up
+  }
+  table <- cbind(MLEs,Lower,Upper)
+  print(table)
+}
+```
+
+```{r}
+#confidence intervals for the MLEs
+make_CI_mle(model1$estimate,model1$std.err)
+```
+
+```{r}
+#10 year return level
+mu <- model1$estimate[1]
+sig <- model1$estimate[2]
+xi <- model1$estimate[3]
+p = 1/10
+Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_10
+```
+
+```{r}
+#100 year return level
+p = 1/100
+Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_100
+```
+
+```{r}
+Z_0 = mu - sig/xi
+Z_0
+```
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/10
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_10 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Zp_10
+```
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/100
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_100 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Zp_100
+```
+
+```{r}
+#Compute variance of Zp for inf-year return level
+a <- (-1/xi)
+b <-  (sig / (xi^2))
+
+grad_Zp <- c(1, a, b)
+
+var_Z_0 <- t(grad_Zp) %*% result$var.cov %*% grad_Zp
+var_Z_0
+```
+
+```{r}
+low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
+up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
+print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
+```
+
+```{r}
+low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
+up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
+print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
+```
+
+```{r}
+low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
+up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
+print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
+```
+
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+```
+
+
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+                                                                            r-LARGEST ORDER STATISTIC APPROACH
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+
+```{r}
+df_rank <-  df_temperature_07[c(6,10)] %>% group_by(Year)  %>% mutate(., rank = rank(desc(Max_Temp))) %>% arrange(Year,rank)
+df_rank
+```
+
+
+```{r}
+k <- 20
+rank_k <- df_rank %>% filter(.,rank<=k+0.5) %>% mutate(rank_mod = ifelse(rank %% 1 == 0, rank, rank-0.5)) %>% dplyr::select(.,Year,rank_mod,Max_Temp) %>% distinct(.) %>% pivot_wider(.,names_from=rank_mod, values_from = Max_Temp)
+rank_k
+```
+
+
+```{r}
+for(i in 1:nrow(rank_k)){
+    if(is.na(rank_k[['1']][i])){
+        for( j in 1:ncol(rank_k)){
+          if(is.na(rank_k[[toString(j)]][i])){
+          } else{
+            rank_k[['1']][i] <- rank_k[[toString(j)]][i]
+            break
+            
+          }
+        }
+     next 
+     }
+}
+rank_k
+```
+
+
+```{r}
+for(i in 1:nrow(rank_k)){
+    for( j in 2:(ncol(rank_k)-1)){
+      if(is.na(rank_k[[toString(j)]][i])){
+        rank_k[[toString(j)]][i] <- rank_k[[toString(j-1)]][i]
+      }else{
+      }
+    }
+}
+names <- c("Year")
+for(i in 1:k){
+  names[i+1] <- toString(i)
+}
+
+rank_k <- data.frame(as.matrix(rank_k[,names]))
+rank_k
+```
+
+```{r, results=FALSE}
+r_1 <- rlarg.fit(rank_k[,-1],r=1)
+r_2 <- rlarg.fit(rank_k[,-1],r=2)
+r_3 <- rlarg.fit(rank_k[,-1],r=3)
+r_4 <- rlarg.fit(rank_k[,-1],r=4)
+r_5 <- rlarg.fit(rank_k[,-1],r=5)
+r_6 <- rlarg.fit(rank_k[,-1],r=6)
+r_7 <- rlarg.fit(rank_k[,-1],r=7)
+r_8 <- rlarg.fit(rank_k[,-1],r=8)
+r_9 <- rlarg.fit(rank_k[,-1],r=9)
+r_10 <- rlarg.fit(rank_k[,-1],r=10)
+```
+
+31.6642177  1.7369478 -0.3592955
+
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_1$mle[1]
+sig <- r_1$mle[2]
+xi <- r_1$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point(color="firebrick") + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="black")
+```
+
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_2$mle[1]
+sig <- r_2$mle[2]
+xi <- r_2$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+```
+
+
+```{r}
+#QUANTILE PLOT FOR BLOCK MAXIMA
+mu <- r_3$mle[1]
+sig <- r_3$mle[2]
+xi <- r_3$mle[3]
+z <- sort(df_max_07$max)
+index <- c(1:length(z))
+G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
+df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="red")
+```
+
+
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+                                                                                  THRESHOLD MODEL APPROACH
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+
+
+```{r}
+fit_mod <- function(x){
+  scale = c()
+  shape = c()
+  for(i in 50:64){
+    mod = gpdFit(x, u = i/2.0)
+    shape[length(shape)+1] <- mod@fit$par.ests[1]
+    scale[length(scale)+1] <- mod@fit$par.ests[2]
+  }
+  df = data.frame(cbind(50:64)/2.0,scale,shape)
+  names(df) <- c("u","scale","shape")
+  return(df)
+}
+```
+
+```{r}
+obs <- df_temperature_07$Max_Temp
+df <- fit_mod(obs)
+df
+```
+
+```{r}
+ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale MLE value")#+ geom_abline(intercept = mod_1$coefficients[1], slope = mod_1$coefficients[2], color="red")
+```
+
+```{r}
+ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape MLE value")#+ geom_abline(intercept = mod_1$coefficients[1], slope = mod_1$coefficients[2], color="red")
+```
+
+
+```{r}
+mrlplot(obs, tlim = c(26,32), nt = 20,
+  p.or.n = FALSE, alpha = 0.05, ylim = NULL,
+  legend.loc = "bottomleft", main = "Mean Residual Life Plot", xlab = "Threshold u",
+  ylab = "Mean Excess")
+```
+
+
+```{r}
+mrlplot(obs, tlim = c(26,31), nt = 20,
+  p.or.n = FALSE, alpha = 0.05, ylim = NULL,
+  legend.loc = "bottomleft", try.thresh = quantile(obs, 0.80, na.rm =
+  TRUE), main = "Mean Residual Life Plot", xlab = "Threshold u",
+  ylab = "Mean Excess")
+```
+
+
+```{r}
+u_0 <- 29
+mod = gpdFit(obs, u = u_0)
+V <- mod@fit$varcov
+V[1,1] <- mod@fit$varcov[2,2]
+V[2,2] <- mod@fit$varcov[1,1]
+V
+```
+
+```{r}
+sig <- mod@fit$par.ests[2]
+xi <- mod@fit$par.ests[1]
+m <- 100*365
+sampl_prop <- length(obs[obs>u_0])/length(obs)
+sampl_prop
+```
+
+```{r}
+A <- matrix(rep(0,9),nrow=3,ncol=3)
+A[2:3,2:3] <- V
+A[1,1] <- sampl_prop*(1-sampl_prop)/length(obs)
+A
+```
+
+```{r}
+x_m <- u_0 + (sig/xi)*((m*sampl_prop)^xi -1)
+x_m
+```
+
+
+```{r}
+d_samp <- sig*(m^xi)*(sampl_prop^(xi-1))
+d_sig <- (xi^(-1))*(((m*sampl_prop)^xi) -1) 
+d_xi <- -1*(sig/(xi^2))*(((m*sampl_prop)^xi) -1) + (sig/xi)*((m*sampl_prop)^xi)*log(m*sampl_prop)
+
+grad <- c(d_samp,d_sig,d_xi)
+
+sd_err <- sqrt(t(grad) %*% A %*% grad)
+x_m - 1.96 * sd_err
+x_m + 1.96 * sd_err
+```
+
+
