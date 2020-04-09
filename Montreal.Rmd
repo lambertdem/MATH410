@@ -106,14 +106,22 @@ make_CI_mle(model1$estimate,model1$std.err)
 ```
 
 ```{r}
-#10 year return level
 mu <- model1$estimate[1]
 sig <- model1$estimate[2]
 xi <- model1$estimate[3]
+p = 1/5
+Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_5
+```
+
+
+```{r}
+#10 year return level
 p = 1/10
 Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
 Zp_10
 ```
+
 
 ```{r}
 #100 year return level
@@ -171,15 +179,28 @@ print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
 ```
 
 ```{r}
+1.96*sqrt(var_Zp_10)
+```
+
+
+```{r}
 low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
 up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
 print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
 ```
 
 ```{r}
+1.96*sqrt(var_Zp_100)
+```
+
+```{r}
 low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
 up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
 print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Z_0)
 ```
 
 ```{r}
@@ -268,7 +289,210 @@ r_9 <- rlarg.fit(rank_k[,-1],r=9)
 r_10 <- rlarg.fit(rank_k[,-1],r=10)
 ```
 
-31.6642177  1.7369478 -0.3592955
+######### r = 2
+
+```{r}
+mu <- r_2$mle[1]
+sig <- r_2$mle[2]
+xi <- r_2$mle[3]
+p = 1/5
+Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_5
+```
+
+
+```{r}
+#10 year return level
+p = 1/10
+Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_10
+```
+
+
+```{r}
+#100 year return level
+p = 1/100
+Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_100
+```
+
+```{r}
+Z_0 = mu - sig/xi
+Z_0
+```
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/10
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_10 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
+var_Zp_10
+```
+
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/100
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_100 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
+var_Zp_100
+```
+
+```{r}
+#Compute variance of Zp for inf-year return level
+a <- (-1/xi)
+b <-  (sig / (xi^2))
+
+grad_Zp <- c(1, a, b)
+
+var_Z_0 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
+var_Z_0
+```
+
+```{r}
+low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
+up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
+print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Zp_10)
+```
+
+
+```{r}
+low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
+up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
+print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Zp_100)
+```
+
+```{r}
+low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
+up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
+print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Z_0)
+```
+
+
+###### r = 3
+
+```{r}
+mu <- r_3$mle[1]
+sig <- r_3$mle[2]
+xi <- r_3$mle[3]
+p = 1/5
+Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_5
+```
+
+
+```{r}
+#10 year return level
+p = 1/10
+Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_10
+```
+
+
+```{r}
+#100 year return level
+p = 1/100
+Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+Zp_100
+```
+
+```{r}
+Z_0 = mu - sig/xi
+Z_0
+```
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/10
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_10 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
+var_Zp_10
+```
+
+
+```{r}
+#Compute variance of Zp for 10-year return level
+p = 1/100
+a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+yp = -log(1-p)
+b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+
+grad_Zp <- c(1, a, b)
+
+var_Zp_100 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
+var_Zp_100
+```
+
+```{r}
+#Compute variance of Zp for inf-year return level
+a <- (-1/xi)
+b <-  (sig / (xi^2))
+
+grad_Zp <- c(1, a, b)
+
+var_Z_0 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
+var_Z_0
+```
+
+```{r}
+low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
+up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
+print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Zp_10)
+```
+
+
+```{r}
+low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
+up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
+print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Zp_100)
+```
+
+```{r}
+low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
+up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
+print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
+```
+
+```{r}
+1.96*sqrt(var_Z_0)
+```
+
+
 
 ```{r}
 #QUANTILE PLOT FOR BLOCK MAXIMA
@@ -353,7 +577,7 @@ df
 ```
 
 ```{r}
-u_0 <- 29
+u_0 <- 30
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_scale <- lm(scale ~ u, df_mod)
 summary(mod_scale)
@@ -407,6 +631,47 @@ mod@fit$par.ests
 mod@fit$par.ses
 ```
 
+####### 10 years
+
+```{r}
+sig <- mod@fit$par.ests[2]
+xi <- mod@fit$par.ests[1]
+m <- 10*365
+sampl_prop <- length(obs[obs>u_0])/length(obs)
+sampl_prop
+```
+
+```{r}
+A <- matrix(rep(0,9),nrow=3,ncol=3)
+A[2:3,2:3] <- V
+A[1,1] <- sampl_prop*(1-sampl_prop)/length(obs)
+A
+```
+
+```{r}
+x_m <- u_0 + (sig/xi)*((m*sampl_prop)^xi -1)
+x_m
+```
+
+
+```{r}
+d_samp <- sig*(m^xi)*(sampl_prop^(xi-1))
+d_sig <- (xi^(-1))*(((m*sampl_prop)^xi) -1) 
+d_xi <- -1*(sig/(xi^2))*(((m*sampl_prop)^xi) -1) + (sig/xi)*((m*sampl_prop)^xi)*log(m*sampl_prop)
+
+grad <- c(d_samp,d_sig,d_xi)
+
+sd_err <- sqrt(t(grad) %*% A %*% grad)
+x_m - 1.96 * sd_err
+x_m + 1.96 * sd_err
+```
+
+```{r}
+1.96*sd_err
+```
+
+
+######## 100 years
 
 ```{r}
 sig <- mod@fit$par.ests[2]
@@ -439,6 +704,10 @@ grad <- c(d_samp,d_sig,d_xi)
 sd_err <- sqrt(t(grad) %*% A %*% grad)
 x_m - 1.96 * sd_err
 x_m + 1.96 * sd_err
+```
+
+```{r}
+1.96*sd_err
 ```
 
 
