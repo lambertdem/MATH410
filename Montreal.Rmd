@@ -83,6 +83,7 @@ model@fit$par.ses
 model1 <- fgev(x=df_max_07$max)
 model1$estimate
 model1$std.err
+model1$std.err*1.96
 ```
 
 ```{r}
@@ -280,14 +281,20 @@ rank_k
 r_1 <- rlarg.fit(rank_k[,-1],r=1)
 r_2 <- rlarg.fit(rank_k[,-1],r=2)
 r_3 <- rlarg.fit(rank_k[,-1],r=3)
-r_4 <- rlarg.fit(rank_k[,-1],r=4)
-r_5 <- rlarg.fit(rank_k[,-1],r=5)
-r_6 <- rlarg.fit(rank_k[,-1],r=6)
-r_7 <- rlarg.fit(rank_k[,-1],r=7)
-r_8 <- rlarg.fit(rank_k[,-1],r=8)
-r_9 <- rlarg.fit(rank_k[,-1],r=9)
-r_10 <- rlarg.fit(rank_k[,-1],r=10)
+#r_4 <- rlarg.fit(rank_k[,-1],r=4)
+#r_5 <- rlarg.fit(rank_k[,-1],r=5)
+#r_6 <- rlarg.fit(rank_k[,-1],r=6)
+#r_7 <- rlarg.fit(rank_k[,-1],r=7)
+#r_8 <- rlarg.fit(rank_k[,-1],r=8)
+#r_9 <- rlarg.fit(rank_k[,-1],r=9)
+#r_10 <- rlarg.fit(rank_k[,-1],r=10)
 ```
+
+```{r}
+r_2$se*1.96
+r_3$se*1.96
+```
+
 
 ######### r = 2
 
@@ -581,6 +588,7 @@ df <- fit_mod(obs)
 df
 ```
 
+
 ```{r}
 u_0 <- 29
 df_mod <- df %>% dplyr::filter(.,u>u_0)
@@ -640,6 +648,7 @@ V
 ```{r}
 mod@fit$par.ests
 mod@fit$par.ses
+mod@fit$par.ses *1.96
 ```
 
 ####### 10 years
