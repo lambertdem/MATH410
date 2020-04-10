@@ -515,6 +515,8 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 mu <- r_2$mle[1]
 sig <- r_2$mle[2]
 xi <- r_2$mle[3]
+
+#z <- append(as.vector(rank_k$X1),as.vector(rank_k$X2))
 z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
@@ -559,12 +561,15 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 fit_mod <- function(x){
   scale = c()
   shape = c()
-  for(i in 50:64){
-    mod = gpdFit(x, u = i/2.0)
+  mult <- 16.0
+  low <- 25 * mult
+  up <- 32 * mult
+  for(i in low:up){
+    mod = gpdFit(x, u = i/mult)
     shape[length(shape)+1] <- mod@fit$par.ests[1]
     scale[length(scale)+1] <- mod@fit$par.ests[2]
   }
-  df = data.frame(cbind(50:64)/2.0,scale,shape)
+  df = data.frame(cbind(low:up)/mult,scale,shape)
   names(df) <- c("u","scale","shape")
   return(df)
 }
@@ -577,9 +582,12 @@ df
 ```
 
 ```{r}
-u_0 <- 30
+u_0 <- 29
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_scale <- lm(scale ~ u, df_mod)
+res <- mod_scale$residuals
+qqnorm(res, pch = 1, frame = FALSE)
+qqline(res, col = "steelblue", lwd = 2)
 summary(mod_scale)
 title <- paste0("Scale Parameter")
 ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale MLE value") + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
@@ -592,6 +600,9 @@ ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale
 ```{r}
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_shape <- lm(shape ~ u, df_mod)
+res <- mod_shape$residuals
+qqnorm(res, pch = 1, frame = FALSE)
+qqline(res, col = "steelblue", lwd = 2)
 summary(mod_shape)
 title <- paste0("Shape Parameter")
 ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape MLE value")  + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
