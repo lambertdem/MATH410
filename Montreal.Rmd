@@ -119,7 +119,7 @@ return_levels_bm <- function(model,levels){
   conf_int = list()
   for(i in 1:length(levels)){
     
-    p <- levels[i]
+    p <- 1.0/levels[i]
     Zp <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
     print(Zp)
     a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
