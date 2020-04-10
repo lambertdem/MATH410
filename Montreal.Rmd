@@ -136,6 +136,7 @@ return_levels_bm <- function(model,levels){
   var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
   conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
   df <- data.frame(cbind(c(unlist(levels),0),unlist(ret_lev),unlist(conf_int)))
+  names(df) <- c("p","Return_level","Confidence_int")
   return (df)
 }
 ```
