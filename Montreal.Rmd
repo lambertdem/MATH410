@@ -112,16 +112,12 @@ return_levels_bm <- function(model,levels){
   mu <- model$estimate[[1]]
   sig <- model$estimate[[2]]
   xi <- model$estimate[[3]]
-  print(mu)
-  print(sig)
-  print(xi)
   ret_lev = list()
   conf_int = list()
   for(i in 1:length(levels)){
     
     p <- 1.0/levels[i]
     Zp <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-    print(Zp)
     a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
     yp = -log(1-p)
     b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
@@ -139,14 +135,15 @@ return_levels_bm <- function(model,levels){
   grad_Zp <- c(1, a, b)
   var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
   conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
-  #df <- data.frame(cbind(c(levels,0),c(ret_lev),c(conf_int)))
-  return (ret_lev)
+  df <- data.frame(cbind(c(unlist(levels),0),unlist(ret_lev),unlist(conf_int)))
+  return (df)
 }
 ```
 
 ```{r}
-levels <- c(2,5,10,50,100)
+levels <- append(c(2:10),c(20,50,100))
 df <- return_levels_bm(model1,levels)
+df
 ```
 
 
