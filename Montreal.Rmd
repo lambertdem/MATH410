@@ -72,18 +72,18 @@ df_max_07
 ```
 
 ```{r}
-#compute MLEs with different library
-model <- gevFit(df_max_07$max)
-model@fit$par.ests
-model@fit$par.ses
-```
-
-```{r}
 #Compute the MLEs
 model1 <- fgev(x=df_max_07$max)
 model1$estimate
 model1$std.err
 model1$std.err*1.96
+```
+
+```{r}
+#compute MLEs with different library
+model <- gevFit(df_max_07$max)
+model@fit$par.ests
+model@fit$par.ses
 ```
 
 ```{r}
@@ -105,6 +105,51 @@ make_CI_mle <- function(MLEs,st_err){
 #confidence intervals for the MLEs
 make_CI_mle(model1$estimate,model1$std.err)
 ```
+
+```{r}
+#Function that computes return levels and 95% confidence interval for different return levels
+return_levels_bm <- function(model,levels){
+  mu <- model$estimate[[1]]
+  sig <- model$estimate[[2]]
+  xi <- model$estimate[[3]]
+  print(mu)
+  print(sig)
+  print(xi)
+  ret_lev = list()
+  conf_int = list()
+  for(i in 1:length(levels)){
+    
+    p <- levels[i]
+    Zp <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+    print(Zp)
+    a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+    yp = -log(1-p)
+    b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+    grad_Zp <- c(1, a, b)
+    var_Zp <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+    conf <- 1.96*sqrt(var_Zp)
+    
+    ret_lev[length(ret_lev)+1] <- Zp
+    conf_int[length(conf_int)+1] <- conf
+  }
+  #add the infinite return level
+  ret_lev[length(ret_lev)+1] <- mu - sig/xi
+  a <- (-1/xi)
+  b <-  (sig / (xi^2))
+  grad_Zp <- c(1, a, b)
+  var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+  conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
+  #df <- data.frame(cbind(c(levels,0),c(ret_lev),c(conf_int)))
+  return (ret_lev)
+}
+```
+
+```{r}
+levels <- c(2,5,10,50,100)
+df <- return_levels_bm(model1,levels)
+```
+
+
 
 ```{r}
 mu <- model1$estimate[1]
@@ -472,9 +517,6 @@ var_Z_0
 low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
 up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
 print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
-```
-
-```{r}
 1.96*sqrt(var_Zp_10)
 ```
 
@@ -483,9 +525,6 @@ print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
 low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
 up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
 print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
-```
-
-```{r}
 1.96*sqrt(var_Zp_100)
 ```
 
@@ -493,12 +532,8 @@ print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
 low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
 up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
 print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
-```
-
-```{r}
 1.96*sqrt(var_Z_0)
 ```
-
 
 
 ```{r}
@@ -523,12 +558,12 @@ mu <- r_2$mle[1]
 sig <- r_2$mle[2]
 xi <- r_2$mle[3]
 
-#z <- append(as.vector(rank_k$X1),as.vector(rank_k$X2))
-z <- sort(df_max_07$max)
+z <- sort(append(as.vector(rank_k$X1),as.vector(rank_k$X2)))
+#z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=2)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated G inverse function value") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=2)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -541,11 +576,13 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 mu <- r_3$mle[1]
 sig <- r_3$mle[2]
 xi <- r_3$mle[3]
-z <- sort(df_max_07$max)
+
+z <- sort(append(append(as.vector(rank_k$X1),as.vector(rank_k$X2)),rank_k$X3))
+#z <- sort(df_max_07$max)
 index <- c(1:length(z))
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=3)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated G inverse function value") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=3)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -590,7 +627,7 @@ df
 
 
 ```{r}
-u_0 <- 29
+u_0 <- 28
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_scale <- lm(scale ~ u, df_mod)
 res <- mod_scale$residuals
@@ -619,15 +656,6 @@ ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
           ) + geom_abline(intercept = mod_shape$coefficients[1], slope = mod_shape$coefficients[2], color="firebrick")
 ```
-
-
-```{r}
-mrlplot(obs, tlim = c(26,32), nt = 20,
-  p.or.n = FALSE, alpha = 0.05, ylim = NULL,
-  legend.loc = "bottomleft", main = "Mean Residual Life Plot", xlab = "Threshold u",
-  ylab = "Mean Excess")
-```
-
 
 ```{r}
 mrlplot(obs, tlim = c(26,31), nt = 20,
