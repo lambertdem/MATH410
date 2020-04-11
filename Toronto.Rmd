@@ -24,7 +24,6 @@ df <- read_csv("Datasets/TR_1937_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv 
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
 names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
-df
 ```
 
 ```{r}
@@ -79,12 +78,6 @@ model1$std.err
 model1$std.err*1.96
 ```
 
-```{r}
-#compute MLEs with different library
-model <- gevFit(df_max_07$max)
-model@fit$par.ests
-model@fit$par.ses
-```
 
 ```{r}
 make_CI_mle <- function(MLEs,st_err){
@@ -164,7 +157,7 @@ sig <- model1$estimate[2]
 xi <- model1$estimate[3]
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach \nToronto") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   

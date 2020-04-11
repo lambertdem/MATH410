@@ -164,7 +164,7 @@ sig <- model1$estimate[2]
 xi <- model1$estimate[3]
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach\nQuébec") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
