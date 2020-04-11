@@ -147,106 +147,6 @@ df <- return_levels_bm(model1,levels)
 df
 ```
 
-
-
-```{r}
-mu <- model1$estimate[1]
-sig <- model1$estimate[2]
-xi <- model1$estimate[3]
-p = 1/5
-Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_5
-```
-
-
-```{r}
-#10 year return level
-p = 1/10
-Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_10
-```
-
-
-```{r}
-#100 year return level
-p = 1/100
-Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_100
-```
-
-```{r}
-Z_0 = mu - sig/xi
-Z_0
-```
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/10
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_10 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
-var_Zp_10
-```
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/100
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_100 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
-var_Zp_100
-```
-
-```{r}
-#Compute variance of Zp for inf-year return level
-a <- (-1/xi)
-b <-  (sig / (xi^2))
-
-grad_Zp <- c(1, a, b)
-
-var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
-var_Z_0
-```
-
-```{r}
-low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
-up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
-print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
-```
-
-```{r}
-1.96*sqrt(var_Zp_10)
-```
-
-
-```{r}
-low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
-up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
-print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
-```
-
-```{r}
-1.96*sqrt(var_Zp_100)
-```
-
-```{r}
-low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
-up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
-print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
-```
-
-```{r}
-1.96*sqrt(var_Z_0)
-```
-
 ```{r}
 #QUANTILE PLOT FOR BLOCK MAXIMA
 z <- sort(df_max_07$max)
@@ -272,13 +172,8 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 #########################################################################################################################################################################################
 
 ```{r}
-df_rank <-  df_temperature_07[c(6,10)] %>% group_by(Year)  %>% mutate(., rank = rank(desc(Max_Temp))) %>% arrange(Year,rank)
-df_rank
-```
-
-
-```{r}
 k <- 20
+df_rank <- df_temperature_07[c(6,10)] %>% group_by(Year)  %>% mutate(., rank = rank(desc(Max_Temp))) %>% arrange(Year,rank)
 rank_k <- df_rank %>% dplyr::filter(.,rank<=k+0.5) %>% mutate(rank_mod = ifelse(rank %% 1 == 0, rank, rank-0.5)) %>% dplyr::select(.,Year,rank_mod,Max_Temp) %>% distinct(.) %>% pivot_wider(.,names_from=rank_mod, values_from = Max_Temp)
 rank_k
 ```
@@ -292,7 +187,6 @@ for(i in 1:nrow(rank_k)){
           } else{
             rank_k[['1']][i] <- rank_k[[toString(j)]][i]
             break
-            
           }
         }
      next 
@@ -315,7 +209,6 @@ names <- c("Year")
 for(i in 1:k){
   names[i+1] <- toString(i)
 }
-
 rank_k <- data.frame(as.matrix(rank_k[,names]))
 rank_k
 ```
@@ -338,201 +231,52 @@ r_2$se*1.96
 r_3$se*1.96
 ```
 
-
-######### r = 2
-
 ```{r}
-mu <- r_2$mle[1]
-sig <- r_2$mle[2]
-xi <- r_2$mle[3]
-p = 1/5
-Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_5
-```
-
-
-```{r}
-#10 year return level
-p = 1/10
-Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_10
-```
-
-
-```{r}
-#100 year return level
-p = 1/100
-Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_100
-```
-
-```{r}
-Z_0 = mu - sig/xi
-Z_0
-```
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/10
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_10 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
-var_Zp_10
-```
-
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/100
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_100 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
-var_Zp_100
+#Function that computes return levels and 95% confidence interval for different return levels
+return_levels_r <- function(model,levels){
+  mu <- r_2$mle[1]
+  sig <- r_2$mle[2]
+  xi <- r_2$mle[3]
+  ret_lev = list()
+  conf_int = list()
+  for(i in 1:length(levels)){
+    
+    p <- 1.0/levels[i]
+    Zp <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
+    a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
+    yp = -log(1-p)
+    b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
+    grad_Zp <- c(1, a, b)
+    var_Zp <- t(grad_Zp) %*% model$cov %*% grad_Zp
+    conf <- 1.96*sqrt(var_Zp)
+    
+    ret_lev[length(ret_lev)+1] <- Zp
+    conf_int[length(conf_int)+1] <- conf
+  }
+  #add the infinite return level
+  ret_lev[length(ret_lev)+1] <- mu - sig/xi
+  a <- (-1/xi)
+  b <-  (sig / (xi^2))
+  grad_Zp <- c(1, a, b)
+  var_Z_0 <- t(grad_Zp) %*% model$cov %*% grad_Zp
+  conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
+  df <- data.frame(cbind(c(unlist(levels),0),unlist(ret_lev),unlist(conf_int)))
+  names(df) <- c("p","Return_level","Confidence_int")
+  return (df)
+}
 ```
 
 ```{r}
-#Compute variance of Zp for inf-year return level
-a <- (-1/xi)
-b <-  (sig / (xi^2))
-
-grad_Zp <- c(1, a, b)
-
-var_Z_0 <- t(grad_Zp) %*% r_2$cov %*% grad_Zp
-var_Z_0
+levels <- append(c(2:10),c(20,50,100))
+df <- return_levels_r(r_2,levels)
+df
 ```
 
 ```{r}
-low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
-up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
-print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
+levels <- append(c(2:10),c(20,50,100))
+df <- return_levels_r(r_3,levels)
+df
 ```
-
-```{r}
-1.96*sqrt(var_Zp_10)
-```
-
-
-```{r}
-low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
-up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
-print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
-```
-
-```{r}
-1.96*sqrt(var_Zp_100)
-```
-
-```{r}
-low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
-up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
-print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
-```
-
-```{r}
-1.96*sqrt(var_Z_0)
-```
-
-
-###### r = 3
-
-```{r}
-mu <- r_3$mle[1]
-sig <- r_3$mle[2]
-xi <- r_3$mle[3]
-p = 1/5
-Zp_5 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_5
-```
-
-
-```{r}
-#10 year return level
-p = 1/10
-Zp_10 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_10
-```
-
-
-```{r}
-#100 year return level
-p = 1/100
-Zp_100 <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-Zp_100
-```
-
-```{r}
-Z_0 = mu - sig/xi
-Z_0
-```
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/10
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_10 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
-var_Zp_10
-```
-
-
-```{r}
-#Compute variance of Zp for 10-year return level
-p = 1/100
-a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-yp = -log(1-p)
-b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-
-grad_Zp <- c(1, a, b)
-
-var_Zp_100 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
-var_Zp_100
-```
-
-```{r}
-#Compute variance of Zp for inf-year return level
-a <- (-1/xi)
-b <-  (sig / (xi^2))
-
-grad_Zp <- c(1, a, b)
-
-var_Z_0 <- t(grad_Zp) %*% r_3$cov %*% grad_Zp
-var_Z_0
-```
-
-```{r}
-low_10 <- Zp_10 - 1.96 * sqrt(var_Zp_10)
-up_10 <- Zp_10 + 1.96 * sqrt(var_Zp_10)
-print(paste0("95% CI for Zp_10: [",low_10,",",up_10,"]"))
-1.96*sqrt(var_Zp_10)
-```
-
-
-```{r}
-low_100 <- Zp_100 - 1.96 * sqrt(var_Zp_100)
-up_100 <- Zp_100 + 1.96 * sqrt(var_Zp_100)
-print(paste0("95% CI for Zp_100: [",low_100,",",up_100,"]"))
-1.96*sqrt(var_Zp_100)
-```
-
-```{r}
-low_0 <- Z_0 - 1.96 * sqrt(var_Z_0)
-up_0 <- Z_0 + 1.96 * sqrt(var_Z_0)
-print(paste0("95% CI for Z_inf: [",low_0,",",up_0,"]"))
-1.96*sqrt(var_Z_0)
-```
-
 
 ```{r}
 #QUANTILE PLOT FOR BLOCK MAXIMA
@@ -662,8 +406,61 @@ mrlplot(obs, tlim = c(26,31), nt = 20,
   ylab = "Mean Excess")
 ```
 
+```{r}
+#Function that computes return levels and 95% confidence interval for different return levels
+return_levels_thresh <- function(obs,u,levels){
+  
+  ret_lev = list()
+  conf_int = list()
+  levs = list()
+  thresh = list()
+  
+  for(j in 1:length(u)){
+    u_0 <- u[j]
+    model = gpdFit(obs, u = u_0)
+    sig <- model@fit$par.ests[2]
+    xi <- model@fit$par.ests[1]
+    V <- model@fit$varcov
+    V[1,1] <- model@fit$varcov[2,2]
+    V[2,2] <- model@fit$varcov[1,1]
+    
+    
+    for(i in 1:length(levels)){
+      m <- levels[i]*365
+      sampl_prop <- length(obs[obs>u_0])/length(obs)
+      A <- matrix(rep(0,9),nrow=3,ncol=3)
+      A[2:3,2:3] <- V
+      A[1,1] <- sampl_prop*(1-sampl_prop)/length(obs)
+      x_m <- u + (sig/xi)*((m*sampl_prop)^xi -1)
+      
+      d_samp <- sig*(m^xi)*(sampl_prop^(xi-1))
+      d_sig <- (xi^(-1))*(((m*sampl_prop)^xi) -1) 
+      d_xi <- -1*(sig/(xi^2))*(((m*sampl_prop)^xi) -1) + (sig/xi)*((m*sampl_prop)^xi)*log(m*sampl_prop)
+      grad <- c(d_samp,d_sig,d_xi)
+      sd_err <- sqrt(t(grad) %*% A %*% grad)
+      
+      ret_lev[length(ret_lev)+1] <- x_m
+      conf_int[length(conf_int)+1] <- 1.96*sd_err
+      levs[length(levs)+1] <- levels[i]
+      thresh[length(thresh)+1] <- u_0
+    }
+  }
+
+  df <- data.frame(cbind(unlist(thresh),unlist(levs),unlist(ret_lev),unlist(conf_int)))
+  names(df) <- c("u","p","Return_level","Confidence_int")
+  return (df)
+}
+```
 
 ```{r}
+u_0 <- 29
+levels <- append(c(2:10),c(20,50,100))
+df <- return_levels_thresh(obs,u_0,levels)
+df
+```
+
+```{r}
+u_0 <- 29
 mod = gpdFit(obs, u = u_0)
 V <- mod@fit$varcov
 V[1,1] <- mod@fit$varcov[2,2]
@@ -704,7 +501,6 @@ x_m
 d_samp <- sig*(m^xi)*(sampl_prop^(xi-1))
 d_sig <- (xi^(-1))*(((m*sampl_prop)^xi) -1) 
 d_xi <- -1*(sig/(xi^2))*(((m*sampl_prop)^xi) -1) + (sig/xi)*((m*sampl_prop)^xi)*log(m*sampl_prop)
-
 grad <- c(d_samp,d_sig,d_xi)
 
 sd_err <- sqrt(t(grad) %*% A %*% grad)
@@ -720,6 +516,11 @@ x_m + 1.96 * sd_err
 ######## 100 years
 
 ```{r}
+u_0 <- 29
+mod = gpdFit(obs, u = u_0)
+V <- mod@fit$varcov
+V[1,1] <- mod@fit$varcov[2,2]
+V[2,2] <- mod@fit$varcov[1,1]
 sig <- mod@fit$par.ests[2]
 xi <- mod@fit$par.ests[1]
 m <- 100*365
