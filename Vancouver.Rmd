@@ -424,7 +424,7 @@ ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape
 ```
 
 ```{r}
-mrlplot(obs, tlim = c(26,31), nt = 20,
+mrlplot(obs, tlim = c(24,31), nt = 20,
   p.or.n = FALSE, alpha = 0.05, ylim = NULL,
   legend.loc = "bottomleft", try.thresh = u_0, main = "Mean Residual Life Plot", xlab = "Threshold u",
   ylab = "Mean Excess")

@@ -54,8 +54,6 @@ df <- df %>% filter(.,Month==7)
 ```
 
 
-Recherche rapide pour les records de précipitations (test de données): Selon météomedia, le mois record contenait une journée avec 55mm de pluie, données probables à premiere vue.
-
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -127,9 +125,8 @@ df_bm_fin
 ```
 
 ```{r}
-ggplot(df_bm_fin, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+ggplot(df_bm_fin, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_fin,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
           ) + scale_color_discrete(name="")
 ```
@@ -161,176 +158,7 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 
-```{r}
-k <- 20
-df_rank <- df_temperature_07[c(6,10)] %>% group_by(Year)  %>% mutate(., rank = rank(desc(Max_Temp))) %>% arrange(Year,rank)
-rank_k <- df_rank %>% dplyr::filter(.,rank<=k+0.5) %>% mutate(rank_mod = ifelse(rank %% 1 == 0, rank, rank-0.5)) %>% dplyr::select(.,Year,rank_mod,Max_Temp) %>% distinct(.) %>% pivot_wider(.,names_from=rank_mod, values_from = Max_Temp)
-rank_k
-```
-
-
-```{r}
-for(i in 1:nrow(rank_k)){
-    if(is.na(rank_k[['1']][i])){
-        for( j in 1:ncol(rank_k)){
-          if(is.na(rank_k[[toString(j)]][i])){
-          } else{
-            rank_k[['1']][i] <- rank_k[[toString(j)]][i]
-            break
-          }
-        }
-     next 
-     }
-}
-rank_k
-```
-
-
-```{r}
-for(i in 1:nrow(rank_k)){
-    for( j in 2:(ncol(rank_k)-1)){
-      if(is.na(rank_k[[toString(j)]][i])){
-        rank_k[[toString(j)]][i] <- rank_k[[toString(j-1)]][i]
-      }else{
-      }
-    }
-}
-names <- c("Year")
-for(i in 1:k){
-  names[i+1] <- toString(i)
-}
-rank_k <- data.frame(as.matrix(rank_k[,names]))
-rank_k
-```
-
-```{r, results=FALSE}
-r_1 <- rlarg.fit(rank_k[,-1],r=1)
-r_2 <- rlarg.fit(rank_k[,-1],r=2)
-r_3 <- rlarg.fit(rank_k[,-1],r=3)
-#r_4 <- rlarg.fit(rank_k[,-1],r=4)
-#r_5 <- rlarg.fit(rank_k[,-1],r=5)
-#r_6 <- rlarg.fit(rank_k[,-1],r=6)
-#r_7 <- rlarg.fit(rank_k[,-1],r=7)
-#r_8 <- rlarg.fit(rank_k[,-1],r=8)
-#r_9 <- rlarg.fit(rank_k[,-1],r=9)
-#r_10 <- rlarg.fit(rank_k[,-1],r=10)
-```
-
-```{r}
-#Function that computes return levels and 95% confidence interval for different return levels
-return_levels_r <- function(r,levels){
-  
-  ret_lev = list()
-  conf_int = list()
-  r_mod = list()
-  levs = list()
-  
-  for(j in 1:length(r)){
-  mod <- rlarg.fit(rank_k[,-1],r=r[j])
-  mu <- mod$mle[1]
-  sig <- mod$mle[2]
-  xi <- mod$mle[3]
-
-  
-    for(i in 1:length(levels)){
-      p <- 1.0/levels[i]
-      Zp <- mu - (sig/xi)*(1-(-log(1-p))^(-1*xi))
-      a <- (-1/xi)*(1-(-log(1-p))^(-1*xi))
-      yp = -log(1-p)
-      b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
-      grad_Zp <- c(1, a, b)
-      var_Zp <- t(grad_Zp) %*% mod$cov %*% grad_Zp
-      conf <- 1.96*sqrt(var_Zp)
-      
-      ret_lev[length(ret_lev)+1] <- Zp
-      conf_int[length(conf_int)+1] <- conf
-      r_mod[length(r_mod)+1] <- r[j]
-      levs[length(levs)+1] <- levels[i]
-    }
-  #add the infinite return level
-  ret_lev[length(ret_lev)+1] <- mu - sig/xi
-  a <- (-1/xi)
-  b <-  (sig / (xi^2))
-  grad_Zp <- c(1, a, b)
-  var_Z_0 <- t(grad_Zp) %*% mod$cov %*% grad_Zp
-  conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
-  r_mod[length(r_mod)+1] <- r[j]
-  levs[length(levs)+1] <- 0
-  }
-  df <- data.frame(cbind(unlist(r_mod),unlist(levs),unlist(ret_lev),unlist(conf_int)))
-  names(df) <- c("r", "p","Return_level","Confidence_int")
-  return (df)
-}
-```
-
-```{r}
-levels <- append(c(2:10),c(20,25,50,75,100))
-r <- c(1:3)
-df_r <- return_levels_r(r,levels)
-df_r
-```
-
-```{r}
-ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)
-          ) + scale_color_discrete(name="r Value")
-```
-
-```{r}
-#QUANTILE PLOT FOR BLOCK MAXIMA
-mu <- r_1$mle[1]
-sig <- r_1$mle[2]
-xi <- r_1$mle[3]
-z <- sort(df_max_07$max)
-index <- c(1:length(z))
-G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
-df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=1)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )
-```
-
-```{r}
-#QUANTILE PLOT FOR BLOCK MAXIMA
-mu <- r_2$mle[1]
-sig <- r_2$mle[2]
-xi <- r_2$mle[3]
-
-z <- sort(append(as.vector(rank_k$X1),as.vector(rank_k$X2)))
-#z <- sort(df_max_07$max)
-index <- c(1:length(z))
-G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
-df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated G inverse function value") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=2)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )
-```
-
-
-```{r}
-#QUANTILE PLOT FOR BLOCK MAXIMA
-mu <- r_3$mle[1]
-sig <- r_3$mle[2]
-xi <- r_3$mle[3]
-
-z <- sort(append(append(as.vector(rank_k$X1),as.vector(rank_k$X2)),rank_k$X3))
-#z <- sort(df_max_07$max)
-index <- c(1:length(z))
-G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
-df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated G inverse function value") + ggtitle("Quantile Plot for the r-Largest Order Statistics (r=3)") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )
-```
-
+No comparisons for reasons detailed in the report.
 
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -342,77 +170,15 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 
-
-```{r}
-fit_mod <- function(x){
-  scale = c()
-  shape = c()
-  mult <- 16.0
-  low <- 25 * mult
-  up <- 32 * mult
-  for(i in low:up){
-    mod = gpdFit(x, u = i/mult)
-    shape[length(shape)+1] <- mod@fit$par.ests[1]
-    scale[length(scale)+1] <- mod@fit$par.ests[2]
-  }
-  df = data.frame(cbind(low:up)/mult,scale,shape)
-  names(df) <- c("u","scale","shape")
-  return(df)
-}
-```
-
-```{r}
-obs <- df_temperature_07$Max_Temp
-df <- fit_mod(obs)
-df
-```
-
-```{r}
-u_0 <- 28
-df_mod <- df %>% dplyr::filter(.,u>u_0)
-mod_scale <- lm(scale ~ u, df_mod)
-res <- mod_scale$residuals
-qqnorm(res, pch = 1, frame = FALSE)
-qqline(res, col = "steelblue", lwd = 2)
-summary(mod_scale)
-title <- paste0("Scale Parameter")
-ggplot(df, aes(x=u, y= scale)) + geom_line() + xlab("Threshold u") + ylab("Scale MLE value") + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + geom_abline(intercept = mod_scale$coefficients[1], slope = mod_scale$coefficients[2], color="firebrick")
-```
-
-```{r}
-df_mod <- df %>% dplyr::filter(.,u>u_0)
-mod_shape <- lm(shape ~ u, df_mod)
-res <- mod_shape$residuals
-qqnorm(res, pch = 1, frame = FALSE)
-qqline(res, col = "steelblue", lwd = 2)
-summary(mod_shape)
-title <- paste0("Shape Parameter")
-ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape MLE value")  + ggtitle(title) + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + geom_abline(intercept = mod_shape$coefficients[1], slope = mod_shape$coefficients[2], color="firebrick")
-```
-
-```{r}
-mrlplot(obs, tlim = c(26,31), nt = 20,
-  p.or.n = FALSE, alpha = 0.05, ylim = NULL,
-  legend.loc = "bottomleft", try.thresh = u_0, main = "Mean Residual Life Plot", xlab = "Threshold u",
-  ylab = "Mean Excess")
-```
-
 ```{r}
 #Function that computes return levels and 95% confidence interval for different return levels
-return_levels_thresh <- function(obs,u,levels){
+return_levels_thresh <- function(obs,city_k,u,levels){
   
   ret_lev = list()
   conf_int = list()
   levs = list()
   thresh = list()
+  city = list()
   
   for(j in 1:length(u)){
     u_0 <- u[j]
@@ -442,36 +208,57 @@ return_levels_thresh <- function(obs,u,levels){
       conf_int[length(conf_int)+1] <- 1.96*sd_err
       levs[length(levs)+1] <- levels[i]
       thresh[length(thresh)+1] <- u_0
+      city[length(city)+1] <- city_k
     }
   }
 
-  df <- data.frame(cbind(unlist(thresh),unlist(levs),unlist(ret_lev),unlist(conf_int)))
-  names(df) <- c("u","m","Return_level","Confidence_int")
+  df <- data.frame(cbind(unlist(city),unlist(thresh),unlist(levs),unlist(ret_lev),unlist(conf_int)))
+  names(df) <- c("city", "u","m","Return_level","Confidence_int")
   return (df)
 }
 ```
 
 ```{r}
-u_0 <- c(28,29,30)
+city_k <- 1
+u_0 <- c(28.5)
+df_temp <- filter(df,city==city_k)
+obs <- df_temp$Max_Temp
 levels <- append(c(2:10),c(20,25,50,75,100))
-df_thresh <- return_levels_thresh(obs,u_0,levels)
+df_u_qc <- return_levels_thresh(obs,city_k,u_0,levels)
+
+city_k <- 2
+u_0 <- c(28)
+df_temp <- filter(df,city==city_k)
+obs <- df_temp$Max_Temp
+levels <- append(c(2:10),c(20,25,50,75,100))
+df_u_mtl <- return_levels_thresh(obs,city_k,u_0,levels)
+
+city_k <- 3
+u_0 <- c(29.5)
+df_temp <- filter(df,city==city_k)
+obs <- df_temp$Max_Temp
+levels <- append(c(2:10),c(20,25,50,75,100))
+df_u_tr <- return_levels_thresh(obs,city_k,u_0,levels)
+
+city_k <- 4
+u_0 <- c(25)
+df_temp <- filter(df,city==city_k)
+obs <- df_temp$Max_Temp
+levels <- append(c(2:10),c(20,25,50,75,100))
+df_u_vc <- return_levels_thresh(obs,city_k,u_0,levels)
+```
+
+```{r}
+df_thresh <- rbind(df_u_qc,df_u_mtl)
+df_thresh <- rbind(df_thresh,df_u_tr)
+df_thresh <- rbind(df_thresh,df_u_vc)
 df_thresh
 ```
 
 ```{r}
-ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+ggplot(df_thresh, aes(x=m, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_thresh,m>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )  + scale_color_discrete(name="Threshold u")
-```
-
-```{r}
-u_0 <- 28
-length(obs[obs>u_0])/length(obs)
-u_0 <- 29
-length(obs[obs>u_0])/length(obs)
-u_0 <- 30
-length(obs[obs>u_0])/length(obs)
+          ) + scale_color_discrete(name="")
 ```
 
