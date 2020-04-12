@@ -262,3 +262,17 @@ ggplot(df_thresh, aes(x=m, y= Return_level,col=factor(city, levels=c(1,2,3,4), l
           ) + scale_color_discrete(name="")
 ```
 
+```{r}
+df_thresh_mod <- df_thresh %>% mutate(city_1 = city + 4) %>% dplyr::select(.,city_1,m,Return_level,Confidence_int) 
+names(df_thresh_mod) <- c("city","p","Return_level","Confidence_int")
+df_final <- rbind(df_bm_fin,df_thresh_mod)
+df_final
+```
+
+
+```{r}
+ggplot(df_final, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4,5,6,7,8), labels=c("Quebec BM", "Montreal BM", "Toronto BM", "Vancouver BM","Quebec T", "Montreal T", "Toronto T", "Vancouver T")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_final,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4,5,6,7,8), labels=c("Quebec BM", "Montreal BM", "Toronto BM", "Vancouver BM","Quebec T", "Montreal T", "Toronto T", "Vancouver T"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + scale_color_discrete(name="") + scale_fill_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900","#FFCC00", "#FF6600","#990000" ,"009900")) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900","#FFCC00", "#FF6600","#990000" ,"009900"),name="")
+```
