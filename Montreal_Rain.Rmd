@@ -20,39 +20,36 @@ library(evmix)
 ```
 
 ```{r, warning=FALSE}
-df <- read_csv("Datasets/VC_1937_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
+df <- read_csv("Datasets/MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
-names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
+names(df)[names(df) == "Total Rain (mm)"] <- "Total_Rain_mm"
 df
 ```
 
 ```{r}
-df <- drop_na(df,Max_Temp) %>% group_by(Date_Time) %>% top_n(1, Max_Temp)
-df_temperature_07 <- df %>% dplyr::filter(.,Month==7)
-df_temperature_07
-```
-```{r}
-df %>% dplyr::filter(.,Year==2017)
+df <- drop_na(df,Total_Rain_mm) %>% group_by(Date_Time) %>% top_n(1, Total_Rain_mm)
+df
 ```
 
-
 ```{r}
-mod <- lm(Max_Temp ~ Date_Time,df)
+mod <- lm(Total_Rain_mm ~ Date_Time,df)
 mod$coefficients[2]
 ```
 
 ```{r}
-ggplot(df, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal temperature") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
-```
-
-```{r}
-ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal Daily Maxima in July") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df, aes(x=Date_Time, y= Total_Rain_mm)) + geom_point() + xlab("Date") + ylab("Rain (mm)") + ggtitle("Montreal Rain Precipitations (mm)") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
           ) 
 ```
+
+```{r}
+ggplot(df, aes(x=Date_Time, y= Total_Rain_mm)) + geom_point() + xlab("Date") + ylab("Précipitations de pluie") + ggtitle("McGill temperature") #+ geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
+```
+
+Recherche rapide pour les records de précipitations (test de données): Selon météomedia, le mois record contenait une journée avec 55mm de pluie, données probables à premiere vue.
 
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -75,13 +72,6 @@ model1 <- fgev(x=df_max_07$max)
 model1$estimate
 model1$std.err
 model1$std.err*1.96
-```
-
-```{r}
-#compute MLEs with different library
-model <- gevFit(df_max_07$max)
-model@fit$par.ests
-model@fit$par.ses
 ```
 
 ```{r}
@@ -146,7 +136,7 @@ df_bm
 ```
 
 ```{r}
-ggplot(df_bm, aes(x=p, y= Return_level)) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Vancouver") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_bm, aes(x=p, y= Return_level)) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -162,7 +152,7 @@ sig <- model1$estimate[2]
 xi <- model1$estimate[3]
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach \nVancouver") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -290,7 +280,7 @@ df_r
 ```
 
 ```{r}
-ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Vancouver") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)
@@ -367,8 +357,8 @@ fit_mod <- function(x){
   scale = c()
   shape = c()
   mult <- 16.0
-  low <- 24 * mult
-  up <- 29.5 * mult
+  low <- 25 * mult
+  up <- 32 * mult
   for(i in low:up){
     mod = gpdFit(x, u = i/mult)
     shape[length(shape)+1] <- mod@fit$par.ests[1]
@@ -387,7 +377,7 @@ df
 ```
 
 ```{r}
-u_0 <- 25
+u_0 <- 28
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_scale <- lm(scale ~ u, df_mod)
 res <- mod_scale$residuals
@@ -418,7 +408,7 @@ ggplot(df, aes(x=u, y= shape)) + geom_line() + xlab("Threshold u") + ylab("Shape
 ```
 
 ```{r}
-mrlplot(obs, tlim = c(24,31), nt = 20,
+mrlplot(obs, tlim = c(26,31), nt = 20,
   p.or.n = FALSE, alpha = 0.05, ylim = NULL,
   legend.loc = "bottomleft", try.thresh = u_0, main = "Mean Residual Life Plot", xlab = "Threshold u",
   ylab = "Mean Excess")
@@ -471,14 +461,15 @@ return_levels_thresh <- function(obs,u,levels){
 ```
 
 ```{r}
-u_0 <- c(25,26,27,28)
+u_0 <- c(28,29,30)
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_thresh <- return_levels_thresh(obs,u_0,levels)
 df_thresh
 ```
 
 ```{r}
-ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Vancouver") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") +
+  theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -486,17 +477,11 @@ ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xl
 ```
 
 ```{r}
-u_0 <- 24
-length(obs[obs>u_0])/length(obs)
-u_0 <- 25
-length(obs[obs>u_0])/length(obs)
-u_0 <- 26
-length(obs[obs>u_0])/length(obs)
-u_0 <- 27
-length(obs[obs>u_0])/length(obs)
 u_0 <- 28
 length(obs[obs>u_0])/length(obs)
 u_0 <- 29
+length(obs[obs>u_0])/length(obs)
+u_0 <- 30
 length(obs[obs>u_0])/length(obs)
 ```
 

@@ -49,12 +49,6 @@ ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("
           ) 
 ```
 
-```{r}
-ggplot(df, aes(x=Date_Time, y= Total_Rain_mm)) + geom_point() + xlab("Date") + ylab("Précipitations de pluie") + ggtitle("McGill temperature") #+ geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
-```
-
-Recherche rapide pour les records de précipitations (test de données): Selon météomedia, le mois record contenait une journée avec 55mm de pluie, données probables à premiere vue.
-
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
