@@ -113,16 +113,100 @@ return_levels_bm <- function(df_bm,levels){
 ```
 
 ```{r}
+#Function that computes return levels and 95% confidence interval for different return levels
+return_levels_bm_shape0 <- function(df_bm,levels){
+  
+  ret_lev = list()
+  conf_int = list()
+  city = list()
+  levs = list()
+  
+  for(j in 1:4){
+    df_temp <- df_bm %>% filter(.,city==j)
+    model <- fgev(x=df_temp$max)
+    
+    mu <- model$estimate[[1]]
+    sig <- model$estimate[[2]]
+    
+    for(i in 1:length(levels)){
+      
+      p <- 1.0/levels[i]
+      Zp <- mu - sig*log(-log(1-p))
+      yp = -log(1-p)
+      a <- -1*log(yp)
+      grad_Zp <- c(1, a, 0)
+      A <- matrix(rep(0,9),nrow=3,ncol=3)
+      A[1:2,1:2] <- model2$var.cov
+      var_Zp <- t(grad_Zp) %*% A %*% grad_Zp
+      conf <- 1.96*sqrt(var_Zp)
+      
+      ret_lev[length(ret_lev)+1] <- Zp
+      conf_int[length(conf_int)+1] <- conf
+      city[length(city)+1] <- j
+      levs[length(levs)+1] <- levels[i]
+    }
+  }
+  
+  df <- data.frame(cbind(unlist(city),unlist(levs),unlist(ret_lev),unlist(conf_int)))
+  names(df) <- c("city","p","Return_level","Confidence_int")
+  return (df)
+}
+```
+
+```{r}
+#Function that computes return levels and 95% confidence interval for different return levels
+return_levels_bm_shape0 <- function(model,levels){
+  mu <- model$estimate[[1]]
+  sig <- model$estimate[[2]]
+  ret_lev = list()
+  conf_int = list()
+  for(i in 1:length(levels)){
+    
+    p <- 1.0/levels[i]
+    Zp <- mu - sig*log(-log(1-p))
+    yp = -log(1-p)
+    a <- -1*log(yp)
+    grad_Zp <- c(1, a, 0)
+    A <- matrix(rep(0,9),nrow=3,ncol=3)
+    A[1:2,1:2] <- model2$var.cov
+    var_Zp <- t(grad_Zp) %*% A %*% grad_Zp
+    conf <- 1.96*sqrt(var_Zp)
+    
+    ret_lev[length(ret_lev)+1] <- Zp
+    conf_int[length(conf_int)+1] <- conf
+  }
+  df_temp <- data.frame(cbind(unlist(levels),unlist(ret_lev),unlist(conf_int)))
+  names(df_temp) <- c("p","Return_level","Confidence_int")
+  return (df_temp)
+}
+```
+
+
+
+```{r}
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_bm_fin <- return_levels_bm(df_bm,levels)
 df_bm_fin
 ```
 
 ```{r}
-ggplot(df_bm_fin, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_fin,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+levels <- append(c(2:10),c(20,25,50,75,100))
+df_bm_shape0 <- return_levels_bm_shape0(df_bm,levels)
+df_bm_shape0
+```
+
+```{r}
+ggplot(df_bm_fin, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_fin,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada (Block Maxima shape=Free)") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
   axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900")) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="")
+          ) + scale_color_discrete(name="") + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="") + scale_fill_manual(values=c(NA, NA,NA ,NA)) 
+```
+
+```{r}
+ggplot(df_bm_shape0, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_shape0,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada (Block Maxima shape=0)") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + scale_color_discrete(name="") + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="") + scale_fill_manual(values=c(NA, NA,NA ,NA)) 
 ```
 
 ```{r}

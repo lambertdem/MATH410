@@ -28,7 +28,7 @@ df
 ```
 
 ```{r}
-df <- drop_na(df,Total_Rain_mm) %>% group_by(Date_Time) %>% top_n(1, Total_Rain_mm)
+df <- drop_na(df,Total_Rain_mm) %>% group_by(Date_Time) %>% top_n(1, Total_Rain_mm) %>% dplyr::filter(.,Year<=1992)
 df
 ```
 

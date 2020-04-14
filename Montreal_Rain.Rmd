@@ -178,13 +178,13 @@ return_levels_bm_shape0 <- function(model,levels){
 ```{r}
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_bm <- return_levels_bm(model1,levels)
-df_bm
+df_bm_fin <- df_bm %>% mutate(mod = "BM")
 ```
 
 ```{r}
 levels <- append(c(2:10),c(20,25,50,75,100))
-df_bm_shape0 <- return_levels_bm_shape0(model2,levels)
-df_bm_shape0
+df_bm_shape_0 <- return_levels_bm_shape0(model2,levels)
+df_bm_shape_0 <- df_bm_shape_0 %>% mutate(mod = "BM(Xi=0)")
 ```
 
 ```{r}
@@ -226,6 +226,8 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 
 ```{r}
 #QUANTILE PLOT FOR BLOCK MAXIMA
+
+##NOT GOOD AS OF NOW
 z <- sort(df_max$max)
 index <- c(1:length(z))
 mu <- model2$estimate[1]
@@ -359,6 +361,12 @@ df_r
 ```
 
 ```{r}
+#final comparison of all models
+df_r_fin_comp <- df_r %>% dplyr::filter(.,r==2) %>% dplyr::select(.,p,Return_level,Confidence_int) %>% dplyr::mutate(.,mod = "r=2")
+```
+
+
+```{r}
 ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
@@ -470,6 +478,12 @@ df <- fit_mod(obs)
 df
 ```
 
+```{r}
+mod_temp = gpdFit(obs, u = 30)
+mod_temp@fit$par.ses *1.96
+
+```
+
 
 ```{r}
 u_0 <- 30
@@ -562,6 +576,7 @@ df_thresh <- return_levels_thresh(obs,u_0,levels)
 df_thresh
 ```
 
+
 ```{r}
 ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") +
   theme(plot.title = element_text(size=18, face="bold", 
@@ -581,4 +596,38 @@ length(obs[obs>u_0])/length(obs)
 u_0 <- 50
 length(obs[obs>u_0])/length(obs)
 ```
+
+```{r}
+#final comparison of all models
+df_u_fin_comp <- df_thresh %>% filter(.,u==30) %>% dplyr::select(.,m,Return_level,Confidence_int) %>% mutate(mod = "u=30")
+names(df_u_fin_comp) <- c("p","Return_level","Confidence_int","mod")
+```
+
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+                                                                                 MODEL COMPARISON
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+#########################################################################################################################################################################################
+
+```{r}
+df_fin <- rbind(df_bm_fin,df_bm_shape_0,df_r_fin_comp,df_u_fin_comp)
+```
+
+
+```{r}
+ggplot(df_fin, aes(x=p, y= Return_level,col=factor(mod, levels=c("BM","BM(Xi=0)","r=2","u=30"), labels=c("BM","BM(Xi=0)","r=2","u=30")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_fin,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(mod, levels=c("BM","BM(Xi=0)","r=2","u=30"), labels=c("BM","BM(Xi=0)","r=2","u=30"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + scale_color_discrete(name="") + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="") + scale_fill_manual(values=c(NA, NA,NA ,NA)) 
+```
+
+
+
+
+
+
 
