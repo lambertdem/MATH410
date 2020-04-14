@@ -24,7 +24,7 @@ df_qc <- read_csv("Datasets/QC_1943_2020.csv")
 names(df_qc)[names(df_qc) == "Date/Time"] <- "Date_Time"
 names(df_qc)[names(df_qc) == "Max Temp (°C)"] <- "Max_Temp"
 names(df_qc)[names(df_qc) == "Total Rain (mm)"] <- "Total_Rain_mm"
-df_qc <- df_qc %>% mutate(.,city=1)
+df_qc <- df_qc %>% dplyr::filter(.,Year<=1992) %>% mutate(.,city=1)
 
 df_mtl <- read_csv("Datasets/MTL_1941_2020.csv")
 names(df_mtl)[names(df_mtl) == "Date/Time"] <- "Date_Time"
@@ -153,35 +153,6 @@ return_levels_bm_shape0 <- function(df_bm,levels){
 }
 ```
 
-```{r}
-#Function that computes return levels and 95% confidence interval for different return levels
-return_levels_bm_shape0 <- function(model,levels){
-  mu <- model$estimate[[1]]
-  sig <- model$estimate[[2]]
-  ret_lev = list()
-  conf_int = list()
-  for(i in 1:length(levels)){
-    
-    p <- 1.0/levels[i]
-    Zp <- mu - sig*log(-log(1-p))
-    yp = -log(1-p)
-    a <- -1*log(yp)
-    grad_Zp <- c(1, a, 0)
-    A <- matrix(rep(0,9),nrow=3,ncol=3)
-    A[1:2,1:2] <- model2$var.cov
-    var_Zp <- t(grad_Zp) %*% A %*% grad_Zp
-    conf <- 1.96*sqrt(var_Zp)
-    
-    ret_lev[length(ret_lev)+1] <- Zp
-    conf_int[length(conf_int)+1] <- conf
-  }
-  df_temp <- data.frame(cbind(unlist(levels),unlist(ret_lev),unlist(conf_int)))
-  names(df_temp) <- c("p","Return_level","Confidence_int")
-  return (df_temp)
-}
-```
-
-
 
 ```{r}
 levels <- append(c(2:10),c(20,25,50,75,100))
@@ -210,19 +181,14 @@ ggplot(df_bm_shape0, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4)
 ```
 
 ```{r}
-#QUANTILE PLOT FOR BLOCK MAXIMA
-z <- sort(df_max_07$max)
-index <- c(1:length(z))
-mu <- model1$estimate[1]
-sig <- model1$estimate[2]
-xi <- model1$estimate[3]
-G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
-df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+#Because of the rejection of the null hypothesis that xi=0 is an accurate model for Quebec, new plot
+df_temp_bm <- df_bm_fin %>% dplyr::filter(.,city==1)
+df_temp_bm1 <- df_bm_shape0 %>% dplyr::filter(.,city>=2)
+df_new_comp <- rbind(df_temp_bm,df_temp_bm1)
+ggplot(df_new_comp, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_new_comp,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada (Block Maxima shape=0)") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )
+          ) + scale_color_discrete(name="") + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="") + scale_fill_manual(values=c(NA, NA,NA ,NA)) 
 ```
 
 
@@ -236,7 +202,31 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 
-No comparisons for reasons detailed in the report.
+FOR THIS SECTION ON R-LARGEST ORDER STATISTIC, RUN THE FILES Montreal_Rain, Quebec_Rain, Toronto_Rain and Vancouver_Rain prior to this. Some variables need to be saved in the local environment
+to avoid code redundancy.
+
+```{r}
+r_2_mtl$mle
+r_4_qc$mle
+r_1_tr$mle
+r_1_vc$mle
+```
+
+```{r}
+df_r_2_mtl <- df_r_2_mtl %>% mutate(city=2)
+df_r_4_qc <- df_r_4_qc %>% mutate(city=1)
+df_r_1_tr <- df_r_1_tr %>% mutate(city=3)
+df_r_1_vc <- df_r_1_vc %>% mutate(city=4)
+df_r_comp <- rbind(df_r_2_mtl,df_r_4_qc,df_r_1_tr,df_r_1_vc)
+```
+
+```{r}
+ggplot(df_r_comp, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_r_comp,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada (Block Maxima shape=0)") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+  axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) + scale_color_discrete(name="") + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="") + scale_fill_manual(values=c(NA, NA,NA ,NA)) 
+```
+
 
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -273,7 +263,7 @@ return_levels_thresh <- function(obs,city_k,u,levels){
     A[1,1] <- sampl_prop*(1-sampl_prop)/length(obs)
     
     for(i in 1:length(levels)){
-      m <- levels[i]*31
+      m <- levels[i]*365
       
       x_m <- u_0 + (sig/xi)*((m*sampl_prop)^xi -1)
       d_samp <- sig*(m^xi)*(sampl_prop^(xi-1))
@@ -298,30 +288,30 @@ return_levels_thresh <- function(obs,city_k,u,levels){
 
 ```{r}
 city_k <- 1
-u_0 <- c(28.5)
+u_0 <- c(30)
 df_temp <- filter(df,city==city_k)
-obs <- df_temp$Max_Temp
+obs <- df_temp$Total_Rain_mm
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_u_qc <- return_levels_thresh(obs,city_k,u_0,levels)
 
 city_k <- 2
-u_0 <- c(28)
+u_0 <- c(30)
 df_temp <- filter(df,city==city_k)
-obs <- df_temp$Max_Temp
+obs <- df_temp$Total_Rain_mm
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_u_mtl <- return_levels_thresh(obs,city_k,u_0,levels)
 
 city_k <- 3
-u_0 <- c(29.5)
+u_0 <- c(30)
 df_temp <- filter(df,city==city_k)
-obs <- df_temp$Max_Temp
+obs <- df_temp$Total_Rain_mm
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_u_tr <- return_levels_thresh(obs,city_k,u_0,levels)
 
 city_k <- 4
-u_0 <- c(25)
+u_0 <- c(30)
 df_temp <- filter(df,city==city_k)
-obs <- df_temp$Max_Temp
+obs <- df_temp$Total_Rain_mm
 levels <- append(c(2:10),c(20,25,50,75,100))
 df_u_vc <- return_levels_thresh(obs,city_k,u_0,levels)
 ```
@@ -334,10 +324,10 @@ df_thresh
 ```
 
 ```{r}
-ggplot(df_thresh, aes(x=m, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_thresh,m>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+ggplot(df_thresh, aes(x=m, y= Return_level,col=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver")))) + geom_point(size=2) + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_thresh,m>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4), labels=c("Quebec", "Montreal", "Toronto", "Vancouver"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
   axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900")) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="")
+          ) + scale_color_discrete(name="")  + scale_fill_manual(values=c(NA,NA,NA,NA)) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="")
 ```
 
 ```{r}
@@ -352,5 +342,5 @@ df_final
 ggplot(df_final, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4,5,6,7,8), labels=c("Quebec BM", "Montreal BM", "Toronto BM", "Vancouver BM","Quebec T", "Montreal T", "Toronto T", "Vancouver T")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_final,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(city, levels=c(1,2,3,4,5,6,7,8), labels=c("Quebec BM", "Montreal BM", "Toronto BM", "Vancouver BM","Quebec T", "Montreal T", "Toronto T", "Vancouver T"))),alpha=0.3) + guides(fill = FALSE) + ggtitle("Return Levels for Maxima of Temperature in July\nfor Cities in Canada") + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
   axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + scale_color_discrete(name="") + scale_fill_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900","#FFCC00", "#FF6600","#990000" ,"009900")) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900","#FFCC00", "#FF6600","#990000" ,"009900"),name="")
+          ) + scale_color_discrete(name="") + scale_fill_manual(values=c(NA,NA,NA,NA,NA,NA,NA,NA)) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900","#FFCC00", "#FF6600","#990000" ,"009900"),name="")
 ```

@@ -360,11 +360,6 @@ df_r <- return_levels_r(r,levels)
 df_r
 ```
 
-```{r}
-#final comparison of all models
-df_r_fin_comp <- df_r %>% dplyr::filter(.,r==2) %>% dplyr::select(.,p,Return_level,Confidence_int) %>% dplyr::mutate(.,mod = "r=2")
-```
-
 
 ```{r}
 ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
@@ -442,6 +437,22 @@ ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered b
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
           )
 ```
+
+```{r}
+#final comparison of all models
+df_r_fin_comp <- df_r %>% dplyr::filter(.,r==2) %>% dplyr::select(.,p,Return_level,Confidence_int) %>% dplyr::mutate(.,mod = "r=2")
+```
+
+```{r}
+#SAVE BEST r-LARGEST ORDER STATISTIC MODEL FOR COMPARISON IN Comparison_Rain.rmd
+r_2_mtl <- r_2
+df_r_2_mtl <- df_r_fin_comp
+```
+
+```{r}
+r_2$mle
+```
+
 
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################

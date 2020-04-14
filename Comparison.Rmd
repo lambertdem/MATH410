@@ -131,22 +131,6 @@ ggplot(df_bm_fin, aes(x=p, y= Return_level,col=factor(city, levels=c(1,2,3,4), l
           ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900")) + scale_color_manual(values=c("#FFCC00", "#FF6600","#990000" ,"009900"),name="")
 ```
 
-```{r}
-#QUANTILE PLOT FOR BLOCK MAXIMA
-z <- sort(df_max_07$max)
-index <- c(1:length(z))
-mu <- model1$estimate[1]
-sig <- model1$estimate[2]
-xi <- model1$estimate[3]
-G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
-df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
-    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
-      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
-      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          )
-```
-
 
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
