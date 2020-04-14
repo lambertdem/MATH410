@@ -109,7 +109,7 @@ return_levels_bm <- function(model,levels){
     yp = -log(1-p)
     b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
     grad_Zp <- c(1, a, b)
-    var_Zp <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+    var_Zp <- t(grad_Zp) %*% model$var.cov %*% grad_Zp
     conf <- 1.96*sqrt(var_Zp)
     
     ret_lev[length(ret_lev)+1] <- Zp
@@ -120,7 +120,7 @@ return_levels_bm <- function(model,levels){
   a <- (-1/xi)
   b <-  (sig / (xi^2))
   grad_Zp <- c(1, a, b)
-  var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+  var_Z_0 <- t(grad_Zp) %*% model$var.cov %*% grad_Zp
   conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
   df <- data.frame(cbind(c(unlist(levels),0),unlist(ret_lev),unlist(conf_int)))
   names(df) <- c("p","Return_level","Confidence_int")
@@ -223,6 +223,9 @@ r_3 <- rlarg.fit(rank_k[,-1],r=3)
 #r_9 <- rlarg.fit(rank_k[,-1],r=9)
 #r_10 <- rlarg.fit(rank_k[,-1],r=10)
 ```
+
+
+
 
 ```{r}
 #Function that computes return levels and 95% confidence interval for different return levels
@@ -374,6 +377,7 @@ obs <- df_temperature_07$Max_Temp
 df <- fit_mod(obs)
 df
 ```
+
 
 ```{r}
 u_0 <- 28

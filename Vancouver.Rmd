@@ -27,11 +27,13 @@ names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
 df
 ```
 
+
 ```{r}
 df <- drop_na(df,Max_Temp) %>% group_by(Date_Time) %>% top_n(1, Max_Temp)
 df_temperature_07 <- df %>% dplyr::filter(.,Month==7)
 df_temperature_07
 ```
+
 ```{r}
 df %>% dplyr::filter(.,Year==2017)
 ```
@@ -42,12 +44,14 @@ mod <- lm(Max_Temp ~ Date_Time,df)
 mod$coefficients[2]
 ```
 
+
 ```{r}
 ggplot(df, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal temperature") + geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
 ```
 
+
 ```{r}
-ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Montreal Daily Maxima in July") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("Date") + ylab("Max temperature") + ggtitle("Vancouver Daily Maxima in July") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -68,6 +72,7 @@ ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("
 df_max_07 <- df_temperature_07 %>% group_by(Year)  %>% summarise(.,max = max(Max_Temp))
 df_max_07
 ```
+
 
 ```{r}
 #Compute the MLEs
@@ -120,7 +125,7 @@ return_levels_bm <- function(model,levels){
     yp = -log(1-p)
     b <-  (sig / (xi^2)) * (1 - yp^(-1*xi)) - (sig / (xi)) * ( yp^(-1*xi)) * log(yp)
     grad_Zp <- c(1, a, b)
-    var_Zp <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+    var_Zp <- t(grad_Zp) %*% model$var.cov %*% grad_Zp
     conf <- 1.96*sqrt(var_Zp)
     
     ret_lev[length(ret_lev)+1] <- Zp
@@ -131,7 +136,7 @@ return_levels_bm <- function(model,levels){
   a <- (-1/xi)
   b <-  (sig / (xi^2))
   grad_Zp <- c(1, a, b)
-  var_Z_0 <- t(grad_Zp) %*% model1$var.cov %*% grad_Zp
+  var_Z_0 <- t(grad_Zp) %*% model$var.cov %*% grad_Zp
   conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
   df <- data.frame(cbind(c(unlist(levels),0),unlist(ret_lev),unlist(conf_int)))
   names(df) <- c("p","Return_level","Confidence_int")
