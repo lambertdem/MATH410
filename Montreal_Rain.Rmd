@@ -45,6 +45,15 @@ ggplot(df, aes(x=Date_Time, y= Total_Rain_mm)) + geom_point() + xlab("Date") + y
           )  #+ geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2], color="red")
 ```
 
+```{r}
+ts_max <- ts(df$Total_Rain_mm)
+ggAcf(ts_max) + ggtitle("ACF plot for different lags in the observations") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) 
+```
+
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
