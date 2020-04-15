@@ -1,5 +1,5 @@
 In the current folder you will find .rmd files that were used to obtain the extreme value analysis results for datasets of temperature
-in July for cities in Canada: Québec, Montreal, Toronto and Vancouver.
+in July, and rain precipitations for cities in Canada (Québec, Montreal, Toronto and Vancouver).
 
 The current folder also contains the following subfolders:
 	Data_Processing:
@@ -34,8 +34,11 @@ https://climate.weather.gc.ca/climate\_data/bulk\_data\_e.html?format=csv&statio
 	   {StationID} =   889 for {Year} in [1937,2013]
 			 51442 for {Year} in [2013,2020]
 
-	   {TimeFrame} = 2 is thre prefered 
+	   {TimeFrame} = 2 is the prefered time frame as it leads to a download od daily data
 
-MONTREAL/PIERRE ELLIOTT TRUDEAU INTL 5415
+	2) Once the .csv files have been downloaded, add the .py scripts to the same folder and run them to obtain a single
+	   unified .csv
 
-MONTREAL INTL A 51157
+
+	3) Run the desired R scripts, making sure that the path to the merged .csv files is accurate.
+
