@@ -21,10 +21,10 @@ def main():
         print(i)
     df.to_csv('VC_2013_2020.csv', index=False)
 
-    nm = "en_climate_daily_NT_2204100_1937_P1D.csv"
+    nm = "en_climate_daily_BC_1108447_1937_P1D.csv"
     df1 = read_file(nm)
     for i in range(1938,2014):
-        nm = "en_climate_daily_NT_2204100_" + str(i) + "_P1D.csv"
+        nm = "en_climate_daily_BC_1108447_" + str(i) + "_P1D.csv"
         df4 = read_file(nm)
         df1 = df1.append(df4)
         print(i)
