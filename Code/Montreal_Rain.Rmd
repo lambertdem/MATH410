@@ -20,7 +20,7 @@ library(evmix)
 ```
 
 ```{r, warning=FALSE}
-df <- read_csv("Datasets/MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
+df <- read_csv("../Datasets/MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
 names(df)[names(df) == "Total Rain (mm)"] <- "Total_Rain_mm"

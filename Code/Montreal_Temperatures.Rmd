@@ -17,10 +17,12 @@ library(evd)
 library(ismev)
 library(fExtremes)
 library(evmix)
+library(stats)
+library(forecast)
 ```
 
 ```{r, warning=FALSE}
-df <- read_csv("Datasets/QC_1943_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
+df <- read_csv("../Datasets/MTL_1941_2020.csv") #QC_1943_2020.csv #VC_1937_2020.csv #TR_1937_2020.csv
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == "Max Temp (°C)"] <- "Max_Temp"
 names(df)[names(df) == "Total Precip (mm)"] <- "Total_Rain_mm"
@@ -50,6 +52,16 @@ ggplot(df_temperature_07, aes(x=Date_Time, y= Max_Temp)) + geom_point() + xlab("
           ) 
 ```
 
+```{r}
+ts_max <- ts(df_temperature_07$Max_Temp)
+ggAcf(ts_max) + ggtitle("ACF plot for different lags in the observations") + theme(plot.title = element_text(size=18, face="bold", 
+    margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+      axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
+      axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
+          ) 
+```
+
+
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
 #########################################################################################################################################################################################
@@ -71,13 +83,6 @@ model1 <- fgev(x=df_max_07$max)
 model1$estimate
 model1$std.err
 model1$std.err*1.96
-```
-
-```{r}
-#compute MLEs with different library
-model <- gevFit(df_max_07$max)
-model@fit$par.ests
-model@fit$par.ses
 ```
 
 ```{r}
@@ -142,7 +147,7 @@ df_bm
 ```
 
 ```{r}
-ggplot(df_bm, aes(x=p, y= Return_level)) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Québec City") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_bm, aes(x=p, y= Return_level)) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -158,7 +163,7 @@ sig <- model1$estimate[2]
 xi <- model1$estimate[3]
 G_inv_zi <- mu - (sig/xi)*(1-(-log(index/(length(z)+1)))^(-1*xi))
 df_quantile_plot <- data.frame(cbind(index,z,G_inv_zi))
-ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach\nQuébec") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
+ggplot(df_quantile_plot, aes(x=z, y= G_inv_zi)) + geom_point() + xlab("Ordered block maxima") + ylab("Estimated inverse function G") + ggtitle("Quantile Plot for the Block Maxima Approach") + geom_abline(intercept = 0, slope = 1, color="firebrick") + theme(plot.title = element_text(size=20, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -231,6 +236,9 @@ r_3 <- rlarg.fit(rank_k[,-1],r=3)
 #r_10 <- rlarg.fit(rank_k[,-1],r=10)
 ```
 
+
+
+
 ```{r}
 #Function that computes return levels and 95% confidence interval for different return levels
 return_levels_r <- function(r,levels){
@@ -286,7 +294,7 @@ df_r
 ```
 
 ```{r}
-ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Québec City") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_r, aes(x=p, y= Return_level,col = factor(r))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") + theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)
@@ -382,8 +390,9 @@ df <- fit_mod(obs)
 df
 ```
 
+
 ```{r}
-u_0 <- 28.5
+u_0 <- 28
 df_mod <- df %>% dplyr::filter(.,u>u_0)
 mod_scale <- lm(scale ~ u, df_mod)
 res <- mod_scale$residuals
@@ -474,7 +483,8 @@ df_thresh
 ```
 
 ```{r}
-ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Québec City") + theme(plot.title = element_text(size=18, face="bold", 
+ggplot(df_thresh, aes(x=m, y= Return_level,col = factor(u))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + ggtitle("Return Levels for Maxima of Temperature in July\nin Montreal") +
+  theme(plot.title = element_text(size=18, face="bold", 
     margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
       axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
@@ -489,17 +499,4 @@ length(obs[obs>u_0])/length(obs)
 u_0 <- 30
 length(obs[obs>u_0])/length(obs)
 ```
-
-```{r}
-df_bm
-```
-
-```{r}
-df_r
-```
-
-```{r}
-df_thresh
-```
-
 

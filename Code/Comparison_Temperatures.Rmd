@@ -20,25 +20,25 @@ library(evmix)
 ```
 
 ```{r, warning=FALSE, results=FALSE}
-df_qc <- read_csv("Datasets/QC_1943_2020.csv")
+df_qc <- read_csv("../Datasets/QC_1943_2020.csv")
 names(df_qc)[names(df_qc) == "Date/Time"] <- "Date_Time"
 names(df_qc)[names(df_qc) == "Max Temp (°C)"] <- "Max_Temp"
 names(df_qc)[names(df_qc) == "Total Precip (mm)"] <- "Total_Rain_mm"
 df_qc <- df_qc %>% mutate(.,city=1)
 
-df_mtl <- read_csv("Datasets/MTL_1941_2020.csv")
+df_mtl <- read_csv("../Datasets/MTL_1941_2020.csv")
 names(df_mtl)[names(df_mtl) == "Date/Time"] <- "Date_Time"
 names(df_mtl)[names(df_mtl) == "Max Temp (°C)"] <- "Max_Temp"
 names(df_mtl)[names(df_mtl) == "Total Precip (mm)"] <- "Total_Rain_mm"
 df_mtl <- df_mtl %>% mutate(.,city=2)
 
-df_tr <- read_csv("Datasets/TR_1937_2020.csv") 
+df_tr <- read_csv("../Datasets/TR_1937_2020.csv") 
 names(df_tr)[names(df_tr) == "Date/Time"] <- "Date_Time"
 names(df_tr)[names(df_tr) == "Max Temp (°C)"] <- "Max_Temp"
 names(df_tr)[names(df_tr) == "Total Precip (mm)"] <- "Total_Rain_mm"
 df_tr <- df_tr %>% mutate(.,city=3)
 
-df_vc <- read_csv("Datasets/VC_1937_2020.csv")
+df_vc <- read_csv("../Datasets/VC_1937_2020.csv")
 names(df_vc)[names(df_vc) == "Date/Time"] <- "Date_Time"
 names(df_vc)[names(df_vc) == "Max Temp (°C)"] <- "Max_Temp"
 names(df_vc)[names(df_vc) == "Total Precip (mm)"] <- "Total_Rain_mm"
