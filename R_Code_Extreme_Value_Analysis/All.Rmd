@@ -21,8 +21,8 @@ library(forecast)
 ```
 
 ```{r}
-city <- "Montreal"
-csv <- "MTL_1941_2020" #MTL_1941_2020 QC_1943_2020 VC_1937_2020 TR_1937_2020
+city <- "Toronto" #Montreal Quebec Vancouver Toronto
+csv <- "TR_1937_2020" #MTL_1941_2020 QC_1943_2020 VC_1937_2020 TR_1937_2020
 originalColumn <- "Total Snow (cm)"
 ```
 
@@ -200,7 +200,7 @@ df_bm_both <- rbind(df_bm_fin,df_bm_shape_0)
 ```
 
 ```{r}
-ggplot(df_bm_both, aes(x=p, y= Return_level,col=factor(mod, levels=c("BM","BM(Xi=0)"), labels=c("Shape = -0.03", "Shape = 0")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_both,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(mod, levels=c(0,1), labels=c("Shape = -0.03", "Shape = 0"))),alpha=0.3) + guides(fill = FALSE) + ggtitle(paste("Return Levels for ", originalColumn," in Montreal")) + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+ggplot(df_bm_both, aes(x=p, y= Return_level,col=factor(mod, levels=c("BM","BM(Xi=0)"), labels=c("Shape = -0.03", "Shape = 0")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_both,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(mod, levels=c(0,1), labels=c("Shape = -0.03", "Shape = 0"))),alpha=0.3) + guides(fill = FALSE) + ggtitle(paste("Return Levels for ", originalColumn," in ", city)) + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
   axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
           ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#FFCC00", "#990000")) + scale_color_manual(values=c("#FFCC00", "#990000"),name="")
