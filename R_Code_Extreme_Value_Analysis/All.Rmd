@@ -21,22 +21,20 @@ library(forecast)
 ```
 
 ```{r}
-city <- "Toronto" #Montreal Quebec Vancouver Toronto
-csv <- "TR_1937_2020" #MTL_1941_2020 QC_1943_2020 VC_1937_2020 TR_1937_2020
-originalColumn <- "Total Snow (cm)"
+city <- "Montreal" #Montreal Quebec Vancouver Toronto
+originalColumn <- "Max Temp (°C)" # "Max Temp (°C)" "Total Rain (mm)" "Total Snow (cm)"
 ```
-
 
 ```{r, warning=FALSE}
-df <- read_csv(paste("../Datasets/", csv, ".csv", sep = ""))
+csv <- list(Montreal = "MTL_1941_2020", Quebec = "QC_1943_2020", Vancouver = "VC_1937_2020", Toronto = "TR_1937_2020")
+df <- read_csv(paste("../Datasets/", csv[[city]], ".csv", sep = ""))
 names(df)[names(df) == "Date/Time"] <- "Date_Time"
 names(df)[names(df) == originalColumn] <- "response"
-df
-```
 
-```{r}
 #insure unicity in years
 df <- drop_na(df,response) %>% group_by(Date_Time) %>% top_n(1, response)
+#Analysis on temperature maxima was conducted on July data only
+if(originalColumn == "Max Temp (°C)"){df <- df %>% dplyr::filter(.,Month ==7)}
 df
 ```
 
@@ -96,6 +94,7 @@ model2$std.err*1.96
 ```{r}
 #Comparison between the models with free shape parameter, and forced shape=0
 anova(model1,model2)
+p_val <- anova(model1,model2)$'Pr(>chisq)'[2]
 ```
 
 
@@ -147,6 +146,16 @@ return_levels_bm <- function(model,levels){
     ret_lev[length(ret_lev)+1] <- Zp
     conf_int[length(conf_int)+1] <- conf
   }
+  if(xi<0){
+    #add the infinite return level
+    ret_lev[length(ret_lev)+1] <- mu - sig/xi
+    a <- (-1/xi)
+    b <-  (sig / (xi^2))
+    grad_Zp <- c(1, a, b)
+    var_Z_0 <- t(grad_Zp) %*% model$var.cov %*% grad_Zp
+    levels[length(levels)+1] <- 0
+    conf_int[length(conf_int)+1] <- 1.96*sqrt(var_Z_0)
+  }
   df_temp <- data.frame(cbind(unlist(levels),unlist(ret_lev),unlist(conf_int)))
   names(df_temp) <- c("p","Return_level","Confidence_int")
   return (df_temp)
@@ -196,14 +205,20 @@ df_bm_shape_0
 ```
 
 ```{r}
-df_bm_both <- rbind(df_bm_fin,df_bm_shape_0)
+if(p_val > 0.05){
+  #Can't reject hypothesis that shape = 0, so keep associated model
+  df_bm_both <- rbind(df_bm_fin,df_bm_shape_0)
+}else{
+  #Use model with free shape parameter only
+  df_bm_both <- df_bm_fin
+}
 ```
 
 ```{r}
-ggplot(df_bm_both, aes(x=p, y= Return_level,col=factor(mod, levels=c("BM","BM(Xi=0)"), labels=c("Shape = -0.03", "Shape = 0")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_both,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(mod, levels=c(0,1), labels=c("Shape = -0.03", "Shape = 0"))),alpha=0.3) + guides(fill = FALSE) + ggtitle(paste("Return Levels for ", originalColumn," in ", city)) + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
+ggplot(df_bm_both, aes(x=p, y= Return_level,col=factor(mod, levels=c("BM","BM(Xi=0)"), labels=c(paste("Shape =",round(model1$estimate[[3]],digits=3)),"Shape = 0")))) + geom_point() + xlab("Number of Years") + ylab("Return Level") + geom_ribbon(data=filter(df_bm_both,p>0),aes(ymin=(Return_level - Confidence_int),ymax=(Return_level + Confidence_int),fill=factor(mod, levels=c(0,1), labels=c("Shape = -0.03", "Shape = 0"))),alpha=0.3) + guides(fill = FALSE) + ggtitle(paste("Return Levels for ", originalColumn," in ", city, sep = "")) + theme(plot.title = element_text(size=18, face="bold", margin = margin(10, 0, 10, 0))) + theme(axis.text.x=element_text(angle=0, size=12, vjust=0.5)) + theme(axis.text.y=element_text(angle=0, size=12, vjust=0.5)) + theme(
   axis.title.x = element_text(size = 14,color="black", vjust=-0.35),
       axis.title.y = element_text(size = 14,color="black" , vjust=0.35)   
-          ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#FFCC00", "#990000")) + scale_color_manual(values=c("#FFCC00", "#990000"),name="")
+          ) + scale_color_discrete(name="")  + scale_fill_manual(values=c("#990000","#FFCC00")) + scale_color_manual(values=c( "#990000","#FFCC00"),name="")
 ```
 
 ```{r}
